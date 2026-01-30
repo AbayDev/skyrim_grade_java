@@ -1,0 +1,108 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.skyrimgrade'
+version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // PostgreSQL Driver
+    implementation 'org.postgresql:postgresql:42.7.4'
+    
+    // HikariCP - Connection Pool
+    implementation 'com.zaxxer:HikariCP:6.2.1'
+    
+    // Jackson - JSON
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2'
+    
+    // Jetty - HTTP Server
+    implementation 'org.eclipse.jetty:jetty-server:12.0.16'
+    implementation 'org.eclipse.jetty:jetty-servlet:11.0.26'
+    
+    // Logging - SLF4J + Logback
+    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation 'ch.qos.logback:logback-classic:1.5.15'
+    
+    // BCrypt for password hashing
+    implementation 'org.mindrot:jbcrypt:0.4'
+    
+    // Testing - JUnit 5 (updated for Java 25 support)
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    
+    // Testing - Mockito (updated for Java 25 support)
+    testImplementation 'org.mockito:mockito-core:5.15.2'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.15.2'
+    
+    // Force Byte Buddy upgrade for Java 25 support (ASM 9.8)
+    testImplementation 'net.bytebuddy:byte-buddy:1.15.11'
+    testImplementation 'net.bytebuddy:byte-buddy-agent:1.15.11'
+    
+    // Testing - AssertJ
+    testImplementation 'org.assertj:assertj-core:3.27.3'
+    
+    // Testing - Testcontainers
+    testImplementation 'org.testcontainers:testcontainers:1.20.4'
+    testImplementation 'org.testcontainers:postgresql:1.20.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
+    
+    // Testing - REST Assured
+    testImplementation 'io.rest-assured:rest-assured:5.5.0'
+    testImplementation 'io.rest-assured:json-path:5.5.0'
+}
+
+application {
+    mainClass = 'com.skyrimgrade.presentation.Main'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+    
+    // Enable experimental Byte Buddy support for Java 25
+    jvmArgs '-Dnet.bytebuddy.experimental=true'
+    
+    // Allow Mockito to attach as Java Agent (required for Java 21+)
+    jvmArgs '-XX:+EnableDynamicAgentLoading'
+}
+
+tasks.named('jar') {
+    manifest {
+        attributes(
+            'Main-Class': 'com.skyrimgrade.presentation.Main',
+            'Implementation-Title': 'SkyrimGrade',
+            'Implementation-Version': version
+        )
+    }
+}
+
+// Create fat JAR with all dependencies
+tasks.register('fatJar', Jar) {
+    archiveClassifier = 'all'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': 'com.skyrimgrade.presentation.Main'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+}
