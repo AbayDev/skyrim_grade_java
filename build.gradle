@@ -56,6 +56,9 @@ dependencies {
     // Testing - AssertJ
     testImplementation 'org.assertj:assertj-core:3.27.3'
     
+    // Testing - H2 Database (in-memory database for unit tests)
+    testImplementation 'com.h2database:h2:2.2.224'
+    
     // Testing - Testcontainers
     testImplementation 'org.testcontainers:testcontainers:1.20.4'
     testImplementation 'org.testcontainers:postgresql:1.20.4'

@@ -1,8 +1,9 @@
 package com.skyrimgrade.presentation;
 
-import com.skyrimgrade.infrastructure.config.AppConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.skyrimgrade.infrastructure.config.AppConfig;
 
 /**
  * Main entry point for SkyrimGrade application.
