@@ -38,6 +38,9 @@ dependencies {
     // BCrypt for password hashing
     implementation 'org.mindrot:jbcrypt:0.4'
     
+    // dotenv for reading .env files
+    implementation 'io.github.cdimascio:dotenv-java:3.0.2'
+    
     // Testing - JUnit 5 (updated for Java 25 support)
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'

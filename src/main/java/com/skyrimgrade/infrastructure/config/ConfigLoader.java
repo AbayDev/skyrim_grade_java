@@ -1,29 +1,65 @@
 package com.skyrimgrade.infrastructure.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.github.cdimascio.dotenv.Dotenv;
+
 /**
- * Configuration loader that reads from environment variables first,
- * then falls back to application.properties file.
+ * Загрузчик конфигурации с поддержкой приоритетов.
  * 
- * Priority:
- * 1. Environment Variables (highest priority)
- * 2. application.properties (fallback)
+ * Приоритет (от высшего к низшему):
+ * 1. Системные переменные окружения (System.getenv())
+ * 2. .env файл (для development)
+ * 3. application.properties (defaults)
  */
 public class ConfigLoader {
     private static final Logger logger = LoggerFactory.getLogger(ConfigLoader.class);
     private final Properties properties;
+    private final Dotenv dotenv;
 
     public ConfigLoader() {
-        this("/application.properties");
+        this("/application.properties", true);
     }
 
     public ConfigLoader(String propertiesFile) {
+        this(propertiesFile, true);
+    }
+    
+    /**
+     * Конструктор с контролем загрузки .env файла.
+     * 
+     * @param propertiesFile Путь к properties файлу
+     * @param loadDotenv Загружать ли .env файл (false для тестов)
+     */
+    public ConfigLoader(String propertiesFile, boolean loadDotenv) {
+        // Загружаем .env файл (только если не тестовое окружение)
+        // В тестах отключаем, чтобы локальный .env не влиял на тесты
+        if (loadDotenv && !propertiesFile.contains("test")) {
+            this.dotenv = Dotenv.configure()
+                    .ignoreIfMissing()  // не падать если .env нет
+                    .ignoreIfMalformed() // не падать на ошибки парсинга
+                    .load();
+            
+            if (dotenv.entries().isEmpty()) {
+                logger.debug(".env file not found or empty");
+            } else {
+                logger.info(".env file loaded with {} entries", dotenv.entries().size());
+            }
+        } else {
+            this.dotenv = null;
+            if (propertiesFile.contains("test")) {
+                logger.debug(".env loading disabled (test properties file detected)");
+            } else {
+                logger.debug(".env loading disabled (test mode)");
+            }
+        }
+        
+        // Загружаем application.properties
         properties = new Properties();
         try (InputStream input = getClass().getResourceAsStream(propertiesFile)) {
             if (input == null) {
@@ -39,28 +75,37 @@ public class ConfigLoader {
     }
 
     /**
-     * Get configuration value with environment variable taking priority.
+     * Получить значение конфигурации с учетом приоритетов.
      * 
-     * @param envKey Environment variable name (e.g., "DB_URL")
-     * @param propertyKey Property file key (e.g., "db.url")
-     * @return Configuration value
+     * @param envKey Имя переменной окружения (например, "DB_URL")
+     * @param propertyKey Ключ в properties файле (например, "db.url")
+     * @return Значение конфигурации
      */
     public String get(String envKey, String propertyKey) {
-        // 1. Try environment variable first (highest priority)
-        String envValue = System.getenv(envKey);
-        if (envValue != null && !envValue.isEmpty()) {
-            logger.debug("Using env variable: {} = {}", envKey, maskSensitive(envKey, envValue));
-            return envValue;
+        // Приоритет 1: Системные переменные окружения (production)
+        String sysEnv = System.getenv(envKey);
+        if (sysEnv != null && !sysEnv.isEmpty()) {
+            logger.debug("Using system env: {} = {}", envKey, maskSensitive(envKey, sysEnv));
+            return sysEnv;
         }
 
-        // 2. Fallback to properties file
+        // Приоритет 2: .env файл (development)
+        if (dotenv != null) {
+            String dotenvValue = dotenv.get(envKey);
+            if (dotenvValue != null && !dotenvValue.isEmpty()) {
+                logger.debug("Using .env: {} = {}", envKey, maskSensitive(envKey, dotenvValue));
+                return dotenvValue;
+            }
+        }
+
+        // Приоритет 3: application.properties (defaults)
         String propValue = properties.getProperty(propertyKey);
         if (propValue != null) {
             logger.debug("Using property: {} = {}", propertyKey, maskSensitive(propertyKey, propValue));
             return propValue;
         }
 
-        // 3. Not found
+        // Ничего не найдено
         logger.warn("Configuration not found: env={}, property={}", envKey, propertyKey);
         return null;
     }
