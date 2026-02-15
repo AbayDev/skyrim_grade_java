@@ -1,3 +1,31 @@
+/*
+ * ============================================================================
+ * SKYRIMGRADE - Backend REST API
+ * ============================================================================
+ * 
+ * Описание: Система управления задачами с геймификацией (Skyrim-style levels)
+ * Архитектура: Clean Architecture + DDD (Domain-Driven Design)
+ * 
+ * Философия проекта:
+ * ✅ Чистая Java 25 БЕЗ тяжеловесных фреймворков (Spring, Jakarta EE)
+ * ✅ Полный контроль над зависимостями и архитектурой
+ * ✅ Легковесность - быстрый старт, низкое потребление памяти
+ * ✅ Обучение - понимание как работают веб-фреймворки "под капотом"
+ * 
+ * Почему БЕЗ Spring Framework:
+ * - Меньше "магии" - явный контроль над конфигурацией и lifecycle
+ * - Легче - ~50 MB памяти vs ~200+ MB для Spring Boot приложения
+ * - Быстрее старт - 1-2 секунды vs 5-10 секунд для Spring Boot
+ * - Обучение - глубокое понимание HTTP, DI, транзакций
+ * 
+ * Когда Spring лучше:
+ * - Enterprise проекты с микросервисами
+ * - Нужна готовая экосистема (Security, Data, Cloud)
+ * - Большая команда - стандартизация подходов
+ * 
+ * ============================================================================
+ */
+
 plugins {
     id 'java'
     id 'application'
@@ -17,57 +45,158 @@ repositories {
 }
 
 dependencies {
-    // PostgreSQL Driver
+    // ============================================================================
+    // DATABASE
+    // ============================================================================
+    
+    // PostgreSQL JDBC Driver - официальный драйвер для подключения к PostgreSQL
+    // ✅ Зачем: Позволяет Java приложению общаться с PostgreSQL базой данных
+    // ✅ Почему PostgreSQL: Production-ready, ACID транзакции, богатая функциональность
+    // ✅ Альтернативы: MySQL (меньше фич), H2 (только для dev/test)
     implementation 'org.postgresql:postgresql:42.7.4'
     
-    // HikariCP - Connection Pool
+    // HikariCP - Connection Pool (пул соединений с БД)
+    // ✅ Зачем: Переиспользует открытые подключения к БД вместо создания новых (быстрее в 50-100 раз)
+    // ✅ Почему HikariCP: Fastest connection pool на рынке (200k+ req/s), индустриальный стандарт
+    // ✅ Используется: Spring Boot (по умолчанию), Hibernate (рекомендует)
+    // ✅ Альтернативы: Apache DBCP2 (устарел, в 2х медленнее), C3P0 (legacy, в 4х медленнее), Tomcat Pool (средне)
     implementation 'com.zaxxer:HikariCP:6.2.1'
     
-    // Jackson - JSON
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2'
+    // Flyway - Database Migrations (версионирование и миграция схемы БД)
+    // ✅ Зачем: Автоматическое применение SQL миграций, версионный контроль БД как Git для схемы
+    // ✅ Почему Flyway: Простота (чистый SQL), отлично для PostgreSQL, легкий старт
+    // ✅ Альтернативы: Liquibase (сложнее, XML/YAML, DB-независимость), самописные скрипты (нет контроля версий)
+    // ✅ Когда Liquibase лучше: Если нужна поддержка разных БД (Oracle+MySQL+PostgreSQL одновременно)
+    implementation 'org.flywaydb:flyway-core:10.10.0'
+    implementation 'org.flywaydb:flyway-database-postgresql:10.10.0'
     
-    // Jetty - HTTP Server
+    // ============================================================================
+    // JSON PROCESSING
+    // ============================================================================
+    
+    // Jackson - JSON сериализация/десериализация (Java Object ↔ JSON)
+    // ✅ Зачем: Конвертирует Java объекты в JSON для REST API и обратно
+    // ✅ Почему Jackson: Fastest (в 2х быстрее Gson), богатая функциональность, стандарт для REST API
+    // ✅ Поддержка: LocalDateTime, кастомные сериализаторы, аннотации, XML/YAML
+    // ✅ Альтернативы: Gson (проще, но медленнее), JSON-B (стандарт Jakarta EE), Moshi (минималистичный)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2' // Поддержка Java 8 Date/Time API (LocalDateTime, Instant)
+    
+    // ============================================================================
+    // HTTP SERVER
+    // ============================================================================
+    
+    // Jetty - Легковесный HTTP сервер и Servlet контейнер
+    // ✅ Зачем: Обрабатывает HTTP запросы, основа для REST API endpoints
+    // ✅ Почему Jetty: Хороший баланс производительности и простоты, легко встраивается, ~30-50 MB памяти
+    // ✅ Стабильность: Используется в NASA, Eclipse IDE, Android SDK
+    // ✅ Альтернативы:
+    //    - Tomcat: больше экосистема, но тяжелее (~60-80 MB), сложнее встраивать
+    //    - Netty: максимальная производительность, но сложный низкоуровневый API
+    //    - Undertow: легче Jetty, хорошая производительность, меньше экосистема
     implementation 'org.eclipse.jetty:jetty-server:12.0.16'
     implementation 'org.eclipse.jetty:jetty-servlet:11.0.26'
     
-    // Logging - SLF4J + Logback
+    // ============================================================================
+    // LOGGING
+    // ============================================================================
+    
+    // SLF4J + Logback - Система логирования (запись логов приложения)
+    // ✅ Зачем: Логирование для debugging, мониторинга, аудита
+    // ✅ Почему SLF4J: Фасад/интерфейс - можно переключить реализацию (Logback → Log4j2) без изменения кода
+    // ✅ Почему Logback: Гибкая конфигурация, автоперезагрузка config, MDC (request ID), используется в Spring Boot
+    // ✅ Фичи: Разные уровни логирования (DEBUG/INFO/ERROR), ротация файлов, фильтры
+    // ✅ Альтернативы: Log4j2 (быстрее в 2-10х, но сложнее), java.util.logging (слабый), Tinylog (минималистичный)
     implementation 'org.slf4j:slf4j-api:2.0.16'
     implementation 'ch.qos.logback:logback-classic:1.5.15'
     
-    // BCrypt for password hashing
+    // ============================================================================
+    // SECURITY
+    // ============================================================================
+    
+    // BCrypt - Безопасное хеширование паролей с автоматической солью
+    // ✅ Зачем: НИКОГДА не храните пароли в открытом виде! BCrypt делает хеш с солью и защитой от brute-force
+    // ✅ Почему BCrypt: Индустриальный стандарт с 1999, проверен временем, настраиваемая сложность (cost factor)
+    // ✅ Защита: MD5 взлом = 1 млрд паролей/сек, BCrypt = 100-1000 паролей/сек (защита от GPU/ASIC атак)
+    // ✅ Альтернативы:
+    //    - MD5/SHA-256: ❌ ОПАСНО! Слишком быстро взламывается
+    //    - Argon2: winner Password Hashing Competition 2015, максимальная защита, но сложнее
+    //    - PBKDF2: стандарт NIST, но медленнее BCrypt
     implementation 'org.mindrot:jbcrypt:0.4'
     
-    // dotenv for reading .env files
+    // ============================================================================
+    // CONFIGURATION
+    // ============================================================================
+    
+    // dotenv-java - Загрузка переменных окружения из .env файла
+    // ✅ Зачем: Отделение конфигурации от кода (12-Factor App принцип), безопасность (secrets не в Git)
+    // ✅ Почему dotenv: Удобство разработки, поддержка разных окружений (dev/staging/prod)
+    // ✅ Использование: .env файл с DB_URL, DB_PASSWORD и т.д. (добавлен в .gitignore)
+    // ✅ Альтернативы: System.getenv() (менее удобно), Spring Config (требует Spring), hardcode (❌ опасно!)
     implementation 'io.github.cdimascio:dotenv-java:3.0.2'
     
-    // Testing - JUnit 5 (updated for Java 25 support)
+    // ============================================================================
+    // TESTING FRAMEWORKS
+    // ============================================================================
+    
+    // JUnit 5 (Jupiter) - Современный фреймворк для написания и запуска тестов
+    // ✅ Зачем: Основа для всех типов тестов (unit/integration/E2E)
+    // ✅ Почему JUnit 5: Индустриальный стандарт, поддержка параметризованных тестов, extension модель
+    // ✅ Альтернативы: JUnit 4 (устарел), TestNG (для enterprise сценариев)
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     
-    // Testing - Mockito (updated for Java 25 support)
+    // Mockito - Mocking фреймворк для изоляции тестов
+    // ✅ Зачем: Создание "заглушек" (mock) зависимостей для изоляции unit тестов
+    // ✅ Почему Mockito: Простой API (when...thenReturn), не нужно поднимать БД/сервер для unit тестов
+    // ✅ Альтернативы: EasyMock (устарел), PowerMock (monkey patching static methods)
     testImplementation 'org.mockito:mockito-core:5.15.2'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.15.2'
     
-    // Force Byte Buddy upgrade for Java 25 support (ASM 9.8)
+    // Byte Buddy - Code generation библиотека (dependency для Mockito)
+    // ✅ Зачем: Mockito использует для создания mock объектов в runtime
+    // ✅ Обновлено: Для поддержки Java 25 (требуется ASM 9.8+)
     testImplementation 'net.bytebuddy:byte-buddy:1.15.11'
     testImplementation 'net.bytebuddy:byte-buddy-agent:1.15.11'
     
-    // Testing - AssertJ
+    // AssertJ - Fluent assertions для читаемых тестов
+    // ✅ Зачем: Делает проверки в тестах выразительными и читаемыми
+    // ✅ Пример: assertThat(user.getName()).isEqualTo("John").isNotEmpty()
+    // ✅ Почему AssertJ: Чище чем JUnit assertions, auto-completion в IDE, больше методов
     testImplementation 'org.assertj:assertj-core:3.27.3'
     
-    // Testing - H2 Database (in-memory database for unit tests)
+    // ============================================================================
+    // TESTING DATABASES
+    // ============================================================================
+    
+    // H2 Database - In-memory база данных для быстрых unit тестов
+    // ✅ Зачем: Быстрые изолированные тесты без установки PostgreSQL
+    // ✅ Почему H2: Автоматический режим совместимости с PostgreSQL, работает в памяти (быстро)
+    // ✅ Использование: Unit тесты репозиториев, не требует Docker
+    // ✅ Ограничения: Не 100% совместим с PostgreSQL (для точных integration тестов используем Testcontainers)
     testImplementation 'com.h2database:h2:2.2.224'
     
-    // Testing - Testcontainers
+    // Testcontainers - Запуск настоящих Docker контейнеров для integration тестов
+    // ✅ Зачем: Integration тесты с реальной PostgreSQL в изолированном Docker контейнере
+    // ✅ Почему Testcontainers: Находит PostgreSQL-специфичные баги, полная изоляция, автоматическая очистка
+    // ✅ Использование: Для критичных integration тестов с реальной БД
+    // ✅ Must-have: Для серьезных проектов с production PostgreSQL
     testImplementation 'org.testcontainers:testcontainers:1.20.4'
     testImplementation 'org.testcontainers:postgresql:1.20.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
     
-    // Testing - REST Assured
+    // ============================================================================
+    // API TESTING
+    // ============================================================================
+    
+    // REST Assured - DSL для тестирования REST API endpoints
+    // ✅ Зачем: E2E тестирование HTTP API как реальный клиент
+    // ✅ Почему REST Assured: Читаемый given/when/then синтаксис, валидация JSON, поддержка всех HTTP методов
+    // ✅ Пример: given().body(user).when().post("/api/users").then().statusCode(201)
+    // ✅ Альтернативы: MockMvc (только для Spring), Apache HttpClient (слишком низкоуровневый)
     testImplementation 'io.rest-assured:rest-assured:5.5.0'
     testImplementation 'io.rest-assured:json-path:5.5.0'
 }

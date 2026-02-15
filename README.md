@@ -40,23 +40,30 @@ src/
 
 ## 🛠️ Технологический стек
 
+> 📖 **Подробная документация:** [docs/TECHNOLOGY_DECISIONS.md](docs/TECHNOLOGY_DECISIONS.md) — почему именно эти технологии и сравнение с альтернативами
+
 **Backend:**
-- Java 17 (без фреймворков)
-- PostgreSQL
-- Jetty (HTTP сервер)
-- HikariCP (connection pool)
-- Jackson (JSON)
+- Java 25 (БЕЗ фреймворков — чистая Java, полный контроль)
+- PostgreSQL + HikariCP (fastest connection pool)
+- Jetty (легковесный HTTP сервер)
+- Jackson (fastest JSON библиотека)
+- Flyway (миграции БД)
 - SLF4J + Logback (логирование)
+- BCrypt (безопасное хеширование паролей)
 
 **Сборка:**
-- Gradle
+- Gradle 8+
 
 **Тестирование:**
-- JUnit 5
-- Mockito
-- AssertJ
-- Testcontainers
-- REST Assured
+- JUnit 5 + Mockito + AssertJ (unit тесты)
+- H2 Database (in-memory для быстрых тестов)
+- Testcontainers + PostgreSQL (integration тесты)
+- REST Assured (E2E тесты API)
+
+**Философия:**
+✅ Легковесность (~50 MB vs ~200+ MB для Spring Boot)  
+✅ Полный контроль над архитектурой и зависимостями  
+✅ Обучение — понимание как работают веб-фреймворки "под капотом"
 
 ## 🚀 Установка и запуск
 
