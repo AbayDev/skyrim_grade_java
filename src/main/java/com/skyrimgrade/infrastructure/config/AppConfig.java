@@ -1,5 +1,7 @@
 package com.skyrimgrade.infrastructure.config;
 
+import com.skyrimgrade.infrastructure.container.Inject;
+
 /**
  * Application configuration holder.
  * Loads configuration from ConfigLoader and provides typed access to settings.
@@ -31,6 +33,7 @@ public class AppConfig {
         this(new ConfigLoader());
     }
 
+    @Inject
     public AppConfig(ConfigLoader configLoader) {
         this.configLoader = configLoader;
 

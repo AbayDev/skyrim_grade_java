@@ -1,6 +1,5 @@
 package com.skyrimgrade.unit.infrastructure.persistence;
 
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -26,15 +25,10 @@ import com.skyrimgrade.infrastructure.persistence.DatabaseConnectionManager;
 class DatabaseConnectionManagerTest {
 
     private AppConfig mockConfig;
+    private DatabaseConnectionManager manager;
 
     @BeforeEach
-    void setUp() throws Exception {
-        // Сбрасываем singleton перед каждым тестом через reflection
-        Field instance = DatabaseConnectionManager.class.getDeclaredField("instance");
-        instance.setAccessible(true);
-        instance.set(null, null);
-
-        // Создаем mock конфигурации для тестов
+    void setUp() {
         mockConfig = mock(AppConfig.class);
         when(mockConfig.getDatabaseUrl()).thenReturn("jdbc:h2:mem:testdb" + System.nanoTime() + ";DB_CLOSE_DELAY=-1");
         when(mockConfig.getDatabaseUsername()).thenReturn("sa");
@@ -42,28 +36,24 @@ class DatabaseConnectionManagerTest {
         when(mockConfig.getDatabasePoolSize()).thenReturn(5);
         when(mockConfig.getDatabaseConnectionTimeout()).thenReturn(3000);
         when(mockConfig.isDevelopment()).thenReturn(true);
+
+        // Singleton убран — контейнер управляет временем жизни
+        // В тестах создаём напрямую через конструктор
+        manager = new DatabaseConnectionManager(mockConfig);
     }
 
     @Test
     @Order(1)
-    @DisplayName("Должен создать singleton instance")
-    void shouldCreateSingletonInstance() {
-        // when
-        DatabaseConnectionManager instance1 = DatabaseConnectionManager.getInstance(mockConfig);
-        DatabaseConnectionManager instance2 = DatabaseConnectionManager.getInstance();
-
-        // then
-        assertThat(instance1).isNotNull();
-        assertThat(instance2).isNotNull();
-        assertThat(instance1).isSameAs(instance2); // тот же объект
+    @DisplayName("Должен создать instance через конструктор")
+    void shouldCreateInstance() {
+        assertThat(manager).isNotNull();
     }
 
     @Test
     @Order(2)
     @DisplayName("Должен получить connection из пула")
     void shouldGetConnectionFromPool() throws SQLException {
-        // given
-        DatabaseConnectionManager manager = DatabaseConnectionManager.getInstance(mockConfig);
+        // given — manager создан в setUp()
 
         // when
         Connection connection = manager.getConnection();
@@ -80,8 +70,7 @@ class DatabaseConnectionManagerTest {
     @Order(3)
     @DisplayName("Должен переиспользовать connection из пула")
     void shouldReuseConnectionFromPool() throws SQLException {
-        // given
-        DatabaseConnectionManager manager = DatabaseConnectionManager.getInstance(mockConfig);
+        // given — manager создан в setUp()
 
         // when - берем и возвращаем соединение несколько раз
         Connection conn1 = manager.getConnection();
@@ -105,8 +94,7 @@ class DatabaseConnectionManagerTest {
     @Order(4)
     @DisplayName("Должен возвращать pool statistics")
     void shouldReturnPoolStats() {
-        // given
-        DatabaseConnectionManager manager = DatabaseConnectionManager.getInstance(mockConfig);
+        // given — manager создан в setUp()
 
         // when
         DatabaseConnectionManager.PoolStats stats = manager.getPoolStats();
@@ -140,8 +128,7 @@ class DatabaseConnectionManagerTest {
     @Order(6)
     @DisplayName("Health check должен возвращать true для работающей БД")
     void shouldReturnTrueForHealthyDatabase() {
-        // given
-        DatabaseConnectionManager manager = DatabaseConnectionManager.getInstance(mockConfig);
+        // given — manager создан в setUp()
 
         // when
         boolean healthy = manager.isHealthy();
@@ -154,8 +141,7 @@ class DatabaseConnectionManagerTest {
     @Order(7)
     @DisplayName("Должен предоставлять DataSource")
     void shouldProvideDataSource() {
-        // given
-        DatabaseConnectionManager manager = DatabaseConnectionManager.getInstance(mockConfig);
+        // given — manager создан в setUp()
 
         // when
         var dataSource = manager.getDataSource();
@@ -168,8 +154,7 @@ class DatabaseConnectionManagerTest {
     @Order(8)
     @DisplayName("isClosed должен возвращать false для активного пула")
     void isClosedShouldReturnFalseForActivePool() {
-        // given
-        DatabaseConnectionManager manager = DatabaseConnectionManager.getInstance(mockConfig);
+        // given — manager создан в setUp()
 
         // when
         boolean closed = manager.isClosed();
@@ -182,8 +167,7 @@ class DatabaseConnectionManagerTest {
     @Order(9)
     @DisplayName("Должен корректно закрывать пул")
     void shouldShutdownGracefully() {
-        // given
-        DatabaseConnectionManager manager = DatabaseConnectionManager.getInstance(mockConfig);
+        // given — manager создан в setUp()
         assertThat(manager.isClosed()).isFalse();
 
         // when
@@ -195,14 +179,8 @@ class DatabaseConnectionManagerTest {
 
     @AfterEach
     void tearDown() {
-        // Закрываем пул после каждого теста
-        try {
-            DatabaseConnectionManager instance = DatabaseConnectionManager.getInstance();
-            if (!instance.isClosed()) {
-                instance.shutdown();
-            }
-        } catch (Exception e) {
-            // ignore if not initialized
+        if (!manager.isClosed()) {
+            manager.shutdown();
         }
     }
 }

@@ -16,37 +16,13 @@ public class DatabaseConnectionManager {
 
     private static final Logger logger = LoggerFactory.getLogger(DatabaseConnectionManager.class);
 
-    private static volatile DatabaseConnectionManager instance;
-
     private final HikariDataSource dataSource;
     private final AppConfig config;
 
-    private DatabaseConnectionManager(AppConfig config) {
+    public DatabaseConnectionManager(AppConfig config) {
         this.config = config;
         this.dataSource = initializeDataSource();
         logger.info("DataConnectionManager initialized with pool size {}", config.getDatabasePoolSize());
-    }
-
-    public static DatabaseConnectionManager getInstance(AppConfig config) {
-        if (instance == null) {
-            synchronized (DatabaseConnectionManager.class) {
-                if (instance == null) {
-                    instance = new DatabaseConnectionManager(config);
-                }
-            }
-        }
-
-        return instance;
-    }
-
-    public static DatabaseConnectionManager getInstance() {
-        if (instance == null) {
-            throw new IllegalStateException(
-                    "DatabaseConnectionManager not initialized. Call getInstance(AppConfig) first."
-            );
-        }
-
-        return instance;
     }
 
     private HikariDataSource initializeDataSource() {
