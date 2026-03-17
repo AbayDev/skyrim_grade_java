@@ -3,23 +3,9 @@ package com.skyrimgrade.infrastructure.container;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-public interface DIContainerInterface {
-
-    DIContainerInterface register(Class<?> iface, Class<?> impl, Scope scope) throws DIContainerException;
-
-    DIContainerInterface register(Class<?> iface, Class<?> impl) throws DIContainerException;
-
-    DIContainerInterface register(Class<?> impl, Scope scope) throws DIContainerException;
-
-    DIContainerInterface register(Class<?> impl) throws DIContainerException;
-
-    DIContainerInterface singletone(Class<?> iface, Object instance) throws DIContainerException;
-
-    <T> T get(Class<T> iface) throws DIContainerException;
-}
 
 public class DIContainer implements DIContainerInterface {
 
@@ -29,6 +15,7 @@ public class DIContainer implements DIContainerInterface {
 
     private final Map<Class<?>, Binding> bindings = new ConcurrentHashMap<>();
     private final Map<Class<?>, Object> singletons = new ConcurrentHashMap<>();
+    private final ThreadLocal<LinkedHashSet<Class<?>>> resolving = ThreadLocal.withInitial(() -> new LinkedHashSet<Class<?>>());
 
     @Override
     public DIContainerInterface register(Class<?> iface, Class<?> impl) throws DIContainerException {
@@ -63,6 +50,7 @@ public class DIContainer implements DIContainerInterface {
             throw new DIContainerException("Class " + iface.getName() + " is already registered");
         }
 
+        bindings.put(iface, new Binding(iface, Scope.SINGLETONE));
         singletons.put(iface, instance);
 
         return this;
@@ -73,7 +61,7 @@ public class DIContainer implements DIContainerInterface {
         return (T) resolve(type);
     }
 
-    public Object resolve(Class<?> type) throws DIContainerException {
+    private Object resolve(Class<?> type) throws DIContainerException {
         Binding binding = bindings.get(type);
         if (binding == null) {
             throw new DIContainerException("Type " + type.getName() + " not registered in DI container");
@@ -84,6 +72,13 @@ public class DIContainer implements DIContainerInterface {
             if (singletone != null) {
                 return singletone;
             }
+        }
+
+        LinkedHashSet<Class<?>> stack = resolving.get();
+
+        // Проверяем ДО создания — цикл происходит внутри createInstance() через рекурсию
+        if (!stack.add(type)) {
+            throw new DIContainerException(buildCycleMessage(stack, type));
         }
 
         try {
@@ -97,8 +92,22 @@ public class DIContainer implements DIContainerInterface {
         } catch (DIContainerException e) {
             throw e;
         } catch (Exception e) {
-            throw new DIContainerException("Failed to create " + type.getName());
+            throw new DIContainerException("Failed to create " + type.getName() + ": " + e.getMessage());
+        } finally {
+            stack.remove(type);
+            if (stack.isEmpty()) {
+                resolving.remove();
+            }
         }
+    }
+
+    private String buildCycleMessage(LinkedHashSet<Class<?>> stack, Class<?> duplicate) {
+        StringBuilder sb = new StringBuilder("Circular dependency detected\n  ");
+        stack.forEach((c) -> sb.append(c.getSimpleName()).append(" → "));
+
+        sb.append(duplicate.getSimpleName()).append(" ← cycle here");
+
+        return sb.toString();
     }
 
     private Object createInstance(Class<?> type) throws DIContainerException {
