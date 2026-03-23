@@ -39,7 +39,7 @@ public class DatabaseConnectionManager {
             hikariConfig.setMinimumIdle(Math.max(2, config.getDatabasePoolSize() / 2));
             hikariConfig.setConnectionTimeout(config.getDatabaseConnectionTimeout());
 
-            int min = 1000 * 60 * 60;
+            int min = 1000 * 60; // 1 минута в мс
 
             // Connection lifecycle
             hikariConfig.setIdleTimeout(min * 10); // 10мин

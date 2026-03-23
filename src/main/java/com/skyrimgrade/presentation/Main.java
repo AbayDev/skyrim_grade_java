@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import com.skyrimgrade.infrastructure.config.AppConfig;
 import com.skyrimgrade.infrastructure.config.ConfigLoader;
 import com.skyrimgrade.infrastructure.container.DIContainer;
+import com.skyrimgrade.infrastructure.migration.FlywayMigrationRunner;
 import com.skyrimgrade.infrastructure.persistence.DatabaseConnectionManager;
 
 /**
@@ -30,14 +31,14 @@ public class Main {
             container
                     .register(ConfigLoader.class)
                     .register(AppConfig.class)
-                    .register(DatabaseConnectionManager.class);
+                    .register(DatabaseConnectionManager.class)
+                    .register(FlywayMigrationRunner.class);
 
             // TODO: по мере роста проекта добавлять сюда:
             // .register(UserRepository.class, PostgresUserRepository.class)
             // .register(UserService.class)
             // .register(UserController.class)
             // .register(JettyServer.class)
-
             // ═══════════════════════════════════════════════════════════
             // ФАЗА 2: Инициализация — контейнер рекурсивно создаёт весь граф
             // ═══════════════════════════════════════════════════════════
@@ -65,8 +66,8 @@ public class Main {
                 logger.info("Application shutdown complete");
             }));
 
-            // TODO: Запустить миграции БД (Flyway)
-            logger.info("Running database migrations...");
+            FlywayMigrationRunner flywayMigrationRunner = container.get(FlywayMigrationRunner.class);
+            flywayMigrationRunner.migrate();
 
             // TODO: Инициализировать HTTP server (Jetty)
             logger.info("Starting HTTP server on {}:{}", config.getServerHost(), config.getServerPort());

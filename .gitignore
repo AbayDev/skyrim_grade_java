@@ -51,3 +51,5 @@ testcontainers.properties
 # Database
 *.db
 *.sqlite
+.github/*
+.github
