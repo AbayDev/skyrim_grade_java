@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import com.skyrimgrade.infrastructure.config.AppConfig;
 import com.skyrimgrade.infrastructure.config.ConfigLoader;
 import com.skyrimgrade.infrastructure.container.DIContainer;
+import com.skyrimgrade.infrastructure.http.JettyServer;
+import com.skyrimgrade.infrastructure.http.Router;
 import com.skyrimgrade.infrastructure.migration.FlywayMigrationRunner;
 import com.skyrimgrade.infrastructure.persistence.DatabaseConnectionManager;
 
@@ -69,8 +71,18 @@ public class Main {
             FlywayMigrationRunner flywayMigrationRunner = container.get(FlywayMigrationRunner.class);
             flywayMigrationRunner.migrate();
 
-            // TODO: Инициализировать HTTP server (Jetty)
-            logger.info("Starting HTTP server on {}:{}", config.getServerHost(), config.getServerPort());
+            Router router = new Router();
+
+            JettyServer server = new JettyServer(config, router);
+            server.start();
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    server.stop();
+                } catch (Exception e) {
+                    logger.error("Error stopping server", e);
+                }
+            }));
 
             logger.info("SkyrimGrade {} started successfully in {} mode",
                     config.getAppVersion(),

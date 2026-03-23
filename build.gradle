@@ -94,7 +94,7 @@ dependencies {
     //    - Tomcat: больше экосистема, но тяжелее (~60-80 MB), сложнее встраивать
     //    - Netty: максимальная производительность, но сложный низкоуровневый API
     //    - Undertow: легче Jetty, хорошая производительность, меньше экосистема
-    implementation 'org.eclipse.jetty:jetty-server:12.0.16'
+    implementation 'org.eclipse.jetty:jetty-server:11.0.26'
     implementation 'org.eclipse.jetty:jetty-servlet:11.0.26'
     
     // ============================================================================
