@@ -116,7 +116,8 @@ public class Router extends AbstractHandler implements RouterInterface {
         }
 
         try {
-            handler.handle(request, response);
+            HttpContext ctx = new HttpContext(request, response);
+            handler.handle(ctx);
             baseRequest.setHandled(true);
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
