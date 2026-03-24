@@ -5,11 +5,15 @@ import org.slf4j.LoggerFactory;
 
 import com.skyrimgrade.infrastructure.config.AppConfig;
 import com.skyrimgrade.infrastructure.config.ConfigLoader;
+import com.skyrimgrade.infrastructure.config.ControllerRegistrar;
 import com.skyrimgrade.infrastructure.container.DIContainer;
 import com.skyrimgrade.infrastructure.http.JettyServer;
 import com.skyrimgrade.infrastructure.http.Router;
+import com.skyrimgrade.infrastructure.http.RouterScanner;
 import com.skyrimgrade.infrastructure.migration.FlywayMigrationRunner;
 import com.skyrimgrade.infrastructure.persistence.DatabaseConnectionManager;
+import com.skyrimgrade.presentation.rest.controllers.AuthController;
+import com.skyrimgrade.presentation.rest.controllers.UserContextController;
 
 /**
  * Main entry point for SkyrimGrade application.
@@ -72,6 +76,12 @@ public class Main {
             flywayMigrationRunner.migrate();
 
             Router router = new Router();
+            RouterScanner routerScanner = new RouterScanner(router);
+            ControllerRegistrar contollerRegistrar = new ControllerRegistrar(container, routerScanner);
+            contollerRegistrar.register(
+                    AuthController.class,
+                    UserContextController.class
+            );
 
             JettyServer server = new JettyServer(config, router);
             server.start();
