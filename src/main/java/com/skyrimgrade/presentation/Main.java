@@ -13,6 +13,7 @@ import com.skyrimgrade.infrastructure.http.RouterScanner;
 import com.skyrimgrade.infrastructure.migration.FlywayMigrationRunner;
 import com.skyrimgrade.infrastructure.persistence.DatabaseConnectionManager;
 import com.skyrimgrade.presentation.rest.controllers.AuthController;
+import com.skyrimgrade.presentation.rest.controllers.HealthController;
 import com.skyrimgrade.presentation.rest.controllers.UserContextController;
 
 /**
@@ -80,7 +81,8 @@ public class Main {
             ControllerRegistrar contollerRegistrar = new ControllerRegistrar(container, routerScanner);
             contollerRegistrar.register(
                     AuthController.class,
-                    UserContextController.class
+                    UserContextController.class,
+                    HealthController.class
             );
 
             JettyServer server = new JettyServer(config, router);
