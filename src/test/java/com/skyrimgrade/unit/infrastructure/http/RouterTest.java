@@ -13,8 +13,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.skyrimgrade.infrastructure.http.HttpContext;
+import com.skyrimgrade.infrastructure.http.HttpStatusResolver;
 import com.skyrimgrade.infrastructure.http.RouteHandler;
 import com.skyrimgrade.infrastructure.http.Router;
+import com.skyrimgrade.infrastructure.http.ErrorMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +27,7 @@ class RouterTest {
 
     @BeforeEach
     void setUp() {
-        router = new Router();
+        router = new Router(new ErrorMapper(new HttpStatusResolver()));
     }
 
     // ─── Exact routes ─────────────────────────────────────────────────────────
@@ -90,7 +92,7 @@ class RouterTest {
         // then
         verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
         verify(baseRequest).setHandled(true);
-        assertThat(writer.toString()).contains("Not found");
+        assertThat(writer.toString()).contains("NOT_FOUND");
     }
 
     @Test

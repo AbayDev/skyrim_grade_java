@@ -11,20 +11,24 @@ import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.skyrimgrade.domain.exception.AppException;
 import com.skyrimgrade.infrastructure.http.ErrorMapper;
 import com.skyrimgrade.infrastructure.http.ErrorResponse;
 import com.skyrimgrade.infrastructure.http.HttpContext;
+import com.skyrimgrade.infrastructure.http.HttpStatusResolver;
 
 class ErrorMapperTest {
 
     private ErrorMapper errorMapper;
     private HttpContext ctx;
+    private HttpStatusResolver httpStatusResolver;
 
     @BeforeEach
     void setUp() {
-        errorMapper = new ErrorMapper();
+        httpStatusResolver = mock(HttpStatusResolver.class);
+        errorMapper = new ErrorMapper(httpStatusResolver);
         ctx = mock(HttpContext.class);
     }
 
@@ -34,9 +38,9 @@ class ErrorMapperTest {
     void handle_shouldRespondWithAppExceptionStatusAndCode() throws IOException {
         // given
         AppException appEx = new AppException("Not found") {
-            @Override public int getHttpStatus() { return 404; }
             @Override public String getErrorCode() { return "NOT_FOUND"; }
         };
+        when(httpStatusResolver.resolve(appEx)).thenReturn(404);
         ArgumentCaptor<ErrorResponse> bodyCaptor = ArgumentCaptor.forClass(ErrorResponse.class);
 
         // when
@@ -45,7 +49,6 @@ class ErrorMapperTest {
         // then
         verify(ctx).json(eq(404), bodyCaptor.capture());
         ErrorResponse response = bodyCaptor.getValue();
-        assertThat(response.httpStatus).isEqualTo(404);
         assertThat(response.errorCode).isEqualTo("NOT_FOUND");
         assertThat(response.message).isEqualTo("Not found");
     }
@@ -55,9 +58,9 @@ class ErrorMapperTest {
         // given
         Map<String, Object> ext = Map.of("field", "email");
         AppException appEx = new AppException("Validation failed", ext) {
-            @Override public int getHttpStatus() { return 422; }
             @Override public String getErrorCode() { return "VALIDATION_ERROR"; }
         };
+        when(httpStatusResolver.resolve(appEx)).thenReturn(422);
         ArgumentCaptor<ErrorResponse> bodyCaptor = ArgumentCaptor.forClass(ErrorResponse.class);
 
         // when
@@ -74,9 +77,9 @@ class ErrorMapperTest {
     void handle_shouldUnwrapInvocationTargetException_whenCauseIsAppException() throws IOException {
         // given
         AppException appEx = new AppException("Forbidden") {
-            @Override public int getHttpStatus() { return 403; }
             @Override public String getErrorCode() { return "FORBIDDEN"; }
         };
+        when(httpStatusResolver.resolve(appEx)).thenReturn(403);
         InvocationTargetException wrapped = new InvocationTargetException(appEx);
         ArgumentCaptor<ErrorResponse> bodyCaptor = ArgumentCaptor.forClass(ErrorResponse.class);
 
@@ -101,9 +104,7 @@ class ErrorMapperTest {
 
         // then
         verify(ctx).json(eq(500), bodyCaptor.capture());
-        ErrorResponse response = bodyCaptor.getValue();
-        assertThat(response.httpStatus).isEqualTo(500);
-        assertThat(response.errorCode).isEqualTo("INTERNAL_SERVER_ERROR");
+        assertThat(bodyCaptor.getValue().errorCode).isEqualTo("INTERNAL_SERVER_ERROR");
     }
 
     @Test
