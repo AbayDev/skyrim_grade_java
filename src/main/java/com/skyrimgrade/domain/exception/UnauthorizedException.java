@@ -7,11 +7,6 @@ public class UnauthorizedException extends DomainException {
     }
 
     @Override
-    public int getHttpStatus() {
-        return 401;
-    }
-
-    @Override
     public String getErrorCode() {
         return "UNAUTHORIZED";
     }

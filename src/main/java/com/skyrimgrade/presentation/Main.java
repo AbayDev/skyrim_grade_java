@@ -7,6 +7,8 @@ import com.skyrimgrade.infrastructure.config.AppConfig;
 import com.skyrimgrade.infrastructure.config.ConfigLoader;
 import com.skyrimgrade.infrastructure.config.ControllerRegistrar;
 import com.skyrimgrade.infrastructure.container.DIContainer;
+import com.skyrimgrade.infrastructure.http.ErrorMapper;
+import com.skyrimgrade.infrastructure.http.HttpStatusResolver;
 import com.skyrimgrade.infrastructure.http.JettyServer;
 import com.skyrimgrade.infrastructure.http.Router;
 import com.skyrimgrade.infrastructure.http.RouterScanner;
@@ -76,7 +78,10 @@ public class Main {
             FlywayMigrationRunner flywayMigrationRunner = container.get(FlywayMigrationRunner.class);
             flywayMigrationRunner.migrate();
 
-            Router router = new Router();
+            HttpStatusResolver httpStatusResolver = new HttpStatusResolver();
+            ErrorMapper errorMapper = new ErrorMapper(httpStatusResolver);
+
+            Router router = new Router(errorMapper);
             RouterScanner routerScanner = new RouterScanner(router);
             ControllerRegistrar contollerRegistrar = new ControllerRegistrar(container, routerScanner);
             contollerRegistrar.register(

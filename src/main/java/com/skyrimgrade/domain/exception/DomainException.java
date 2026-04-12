@@ -26,9 +26,6 @@ public abstract class DomainException extends AppException {
     abstract public String getErrorCode();
 
     @Override
-    abstract public int getHttpStatus();
-
-    @Override
     public Level getLogLevel() {
         return Level.INFO;
     }

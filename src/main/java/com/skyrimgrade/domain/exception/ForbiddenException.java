@@ -7,11 +7,6 @@ public class ForbiddenException extends DomainException {
     }
 
     @Override
-    public int getHttpStatus() {
-        return 403;
-    }
-
-    @Override
     public String getErrorCode() {
         return "FORBIDDEN";
     }

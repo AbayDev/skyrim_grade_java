@@ -1,9 +1,9 @@
 package com.skyrimgrade.infrastructure.container;
 
-public class DIContainerException extends Exception {
+public class DIContainerException extends RuntimeException {
 
     public DIContainerException(String message) {
-        super("[DIContainerExceptin] " + message);
+        super("[DIContainer] " + message);
     }
 
 }

@@ -28,8 +28,6 @@ public abstract class AppException extends RuntimeException {
         this.extension = extension;
     }
 
-    abstract public int getHttpStatus();
-
     abstract public String getErrorCode();
 
     public Level getLogLevel() {

@@ -9,6 +9,8 @@ import java.util.Map;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
+import com.skyrimgrade.domain.exception.NotFoundException;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,7 +19,11 @@ public class Router extends AbstractHandler implements RouterInterface {
 
     private final Map<String, RouteHandler> exactRoutes = new HashMap<>();
     private final List<RouteEntry> dynamicRoutes = new ArrayList<>();
-    private final ErrorMapper errorMapper = new ErrorMapper();
+    private final ErrorMapper errorMapper;
+
+    public Router(ErrorMapper errorMapper) {
+        this.errorMapper = errorMapper;
+    }
 
     private static class RouteEntry {
 
@@ -115,15 +121,11 @@ public class Router extends AbstractHandler implements RouterInterface {
             }
         }
 
-        if (handler == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Not found\", \"path\": \"" + target + "\"}");
-            baseRequest.setHandled(true);
-            return;
-        }
-
         try {
+            if (handler == null) {
+                throw new NotFoundException("Route not found" + " " + request.getMethod() + " " + target);
+            }
+
             HttpContext ctx = new HttpContext(request, response);
             handler.handle(ctx);
             baseRequest.setHandled(true);

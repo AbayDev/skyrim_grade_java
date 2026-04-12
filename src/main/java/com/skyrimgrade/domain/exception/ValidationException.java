@@ -5,19 +5,17 @@ import java.util.Map;
 
 public class ValidationException extends DomainException {
 
+    private static final String ERROR_KEY = "errors";
+
     public ValidationException(List<FieldError> errors) {
-        Map<String, Object> extension = Map.of("errors", errors);
+        Map<String, Object> extension = Map.of(ERROR_KEY, errors);
         super("Validation failed", extension);
     }
 
     public ValidationException(String field, String message) {
-        Map<String, Object> extension = Map.of("errors", List.of(new FieldError(field, message)));
+        Map<String, Object> extension = Map.of(ERROR_KEY, List.of(new FieldError(field, message)
+        ));
         super("Validation failed", extension);
-    }
-
-    @Override
-    public int getHttpStatus() {
-        return 400;
     }
 
     @Override
@@ -25,8 +23,9 @@ public class ValidationException extends DomainException {
         return "VALIDATION";
     }
 
+    @SuppressWarnings("unchecked")
     public List<FieldError> getErrors() {
-        return (List<FieldError>) this.getExtension().get("errors");
+        return (List<FieldError>) this.getExtension().get(ERROR_KEY);
     }
 
 }

@@ -17,11 +17,6 @@ public class NotFoundException extends DomainException {
     }
 
     @Override
-    public int getHttpStatus() {
-        return 404;
-    }
-
-    @Override
     public String getErrorCode() {
         return "NOT_FOUND";
     }

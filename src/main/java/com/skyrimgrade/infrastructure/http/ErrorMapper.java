@@ -4,9 +4,33 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.skyrimgrade.domain.exception.AppException;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 public class ErrorMapper {
+
+    private static final Logger logger = LoggerFactory.getLogger(ErrorMapper.class);
+
+    private final HttpStatusResolver httpStatusResolver;
+
+    public ErrorMapper(HttpStatusResolver httpStatusResolver) {
+        this.httpStatusResolver = httpStatusResolver;
+    }
+
+    private void logException(AppException ae) {
+        switch (ae.getLogLevel()) {
+            case INFO ->
+                logger.info("[{}] {}", ae.getErrorCode(), ae.getMessage());
+            case WARN ->
+                logger.warn("[{}] {}", ae.getErrorCode(), ae.getMessage());
+            case ERROR ->
+                logger.error("[{}] {}", ae.getErrorCode(), ae.getMessage(), ae);
+        }
+    }
 
     public void handle(Throwable e, HttpContext ctx) throws IOException {
         // Разворачиваем InvocationTargetException от Reflection
@@ -15,10 +39,10 @@ public class ErrorMapper {
                 : e;
 
         if (cause instanceof AppException ae) {
+            logException(ae);
             ctx.json(
-                    ae.getHttpStatus(),
+                    httpStatusResolver.resolve(ae),
                     new ErrorResponse(
-                            ae.getHttpStatus(),
                             ae.getErrorCode(),
                             ae.getMessage(),
                             ae.getExtension(),
@@ -26,14 +50,15 @@ public class ErrorMapper {
                     )
             );
         } else {
+            ErrorResponse error = new ErrorResponse(
+                    "INTERNAL_SERVER_ERROR",
+                    "Internal server error",
+                    Instant.now()
+            );
+            logger.error("[{}] {}", error.errorCode, error.message, cause);
             ctx.json(
-                    500,
-                    new ErrorResponse(
-                            500,
-                            "INTERNAL_SERVER_ERROR",
-                            "Internal server error",
-                            Instant.now()
-                    )
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    error
             );
         }
     }
