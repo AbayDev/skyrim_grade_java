@@ -7,10 +7,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.eclipse.jetty.server.Request;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.skyrimgrade.infrastructure.http.HttpContext;
 import com.skyrimgrade.infrastructure.http.RouteHandler;
 import com.skyrimgrade.infrastructure.http.Router;
 
@@ -46,7 +48,7 @@ class RouterTest {
         router.handle("/health", baseRequest, request, response);
 
         // then
-        verify(handler).handle(request, response);
+        verify(handler).handle(any(HttpContext.class));
         verify(baseRequest).setHandled(true);
     }
 
@@ -68,7 +70,7 @@ class RouterTest {
         router.handle("/api/tasks", baseRequest, request, response);
 
         // then
-        verify(handler).handle(request, response);
+        verify(handler).handle(any(HttpContext.class));
     }
 
     @Test
@@ -114,7 +116,7 @@ class RouterTest {
     @Test
     void handle_shouldReturn500_whenHandlerThrowsException() throws Exception {
         // given
-        RouteHandler handler = (req, res) -> { throw new RuntimeException("Unexpected error"); };
+        RouteHandler handler = (ctx) -> { throw new RuntimeException("Unexpected error"); };
         router.get("/boom", handler);
 
         Request baseRequest = mock(Request.class);
@@ -153,7 +155,7 @@ class RouterTest {
         router.handle("/api/tasks/42", baseRequest, request, response);
 
         // then
-        verify(handler).handle(request, response);
+        verify(handler).handle(any(HttpContext.class));
         verify(request).setAttribute("id", "42");
     }
 
@@ -200,7 +202,7 @@ class RouterTest {
         router.handle("/api/tasks/export", baseRequest, request, response);
 
         // then — должен вызваться exactHandler, НЕ dynamicHandler
-        verify(exactHandler).handle(request, response);
+        verify(exactHandler).handle(any(HttpContext.class));
     }
 
     @Test

@@ -1,23 +1,22 @@
 package com.skyrimgrade.domain.exception;
 
 import java.util.List;
+import java.util.Map;
 
 public class ValidationException extends DomainException {
 
-    private final List<FieldError> errors;
-
     public ValidationException(List<FieldError> errors) {
-        super("Validation failed");
-        this.errors = errors;
+        Map<String, Object> extension = Map.of("errors", errors);
+        super("Validation failed", extension);
     }
 
     public ValidationException(String field, String message) {
-        super("Validation failed");
-        this.errors = List.of(new FieldError(field, message));
+        Map<String, Object> extension = Map.of("errors", List.of(new FieldError(field, message)));
+        super("Validation failed", extension);
     }
 
     @Override
-    public Integer getHttpStatus() {
+    public int getHttpStatus() {
         return 400;
     }
 
@@ -27,7 +26,7 @@ public class ValidationException extends DomainException {
     }
 
     public List<FieldError> getErrors() {
-        return errors;
+        return (List<FieldError>) this.getExtension().get("errors");
     }
 
 }

@@ -1,12 +1,14 @@
 package com.skyrimgrade.domain.exception;
 
 import java.time.Instant;
+import java.util.Map;
 
 import org.slf4j.event.Level;
 
 public abstract class AppException extends RuntimeException {
 
     private final Instant timestamp = Instant.now();
+    private Map<String, Object> extension;
 
     public AppException(String message) {
         super(message);
@@ -16,7 +18,17 @@ public abstract class AppException extends RuntimeException {
         super(message, cause);
     }
 
-    abstract public Integer getHttpStatus();
+    public AppException(String message, Map<String, Object> extension) {
+        super(message);
+        this.extension = extension;
+    }
+
+    public AppException(String message, Throwable cause, Map<String, Object> extension) {
+        super(message, cause);
+        this.extension = extension;
+    }
+
+    abstract public int getHttpStatus();
 
     abstract public String getErrorCode();
 
@@ -28,4 +40,7 @@ public abstract class AppException extends RuntimeException {
         return timestamp;
     }
 
+    public Map<String, Object> getExtension() {
+        return extension;
+    }
 }

@@ -1,5 +1,7 @@
 package com.skyrimgrade.domain.exception;
 
+import java.util.Map;
+
 import org.slf4j.event.Level;
 
 public abstract class DomainException extends AppException {
@@ -12,11 +14,19 @@ public abstract class DomainException extends AppException {
         super(message, cause);
     }
 
+    public DomainException(String message, Map<String, Object> extension) {
+        super(message, extension);
+    }
+
+    public DomainException(String message, Throwable cause, Map<String, Object> extension) {
+        super(message, cause, extension);
+    }
+
     @Override
     abstract public String getErrorCode();
 
     @Override
-    abstract public Integer getHttpStatus();
+    abstract public int getHttpStatus();
 
     @Override
     public Level getLogLevel() {

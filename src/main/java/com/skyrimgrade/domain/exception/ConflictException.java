@@ -7,7 +7,7 @@ public class ConflictException extends DomainException {
     }
 
     @Override
-    public Integer getHttpStatus() {
+    public int getHttpStatus() {
         return 409;
     }
 

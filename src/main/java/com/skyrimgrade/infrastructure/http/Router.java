@@ -17,8 +17,10 @@ public class Router extends AbstractHandler implements RouterInterface {
 
     private final Map<String, RouteHandler> exactRoutes = new HashMap<>();
     private final List<RouteEntry> dynamicRoutes = new ArrayList<>();
+    private final ErrorMapper errorMapper = new ErrorMapper();
 
     private static class RouteEntry {
+
         final String method;
         final String pattern;
         final RouteHandler handler;
@@ -67,11 +69,17 @@ public class Router extends AbstractHandler implements RouterInterface {
         String[] patternParts = pattern.split("/");
         String[] pathParts = path.split("/");
 
-        if (patternParts.length != pathParts.length) return false;
+        if (patternParts.length != pathParts.length) {
+            return false;
+        }
 
         for (int i = 0; i < patternParts.length; i++) {
-            if (patternParts[i].startsWith("{")) continue;
-            if (!patternParts[i].equals(pathParts[i])) return false;
+            if (patternParts[i].startsWith("{")) {
+                continue;
+            }
+            if (!patternParts[i].equals(pathParts[i])) {
+                return false;
+            }
         }
         return true;
     }
@@ -120,8 +128,8 @@ public class Router extends AbstractHandler implements RouterInterface {
             handler.handle(ctx);
             baseRequest.setHandled(true);
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"error\": \"Internal server error\"}");
+            HttpContext ctx = new HttpContext(request, response);
+            errorMapper.handle(e, ctx);
             baseRequest.setHandled(true);
         }
     }

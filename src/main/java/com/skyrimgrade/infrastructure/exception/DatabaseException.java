@@ -9,7 +9,7 @@ public class DatabaseException extends AppException {
     }
 
     @Override
-    public Integer getHttpStatus() {
+    public int getHttpStatus() {
         return 503;
     }
 
