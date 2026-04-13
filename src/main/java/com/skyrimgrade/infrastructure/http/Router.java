@@ -9,6 +9,7 @@ import java.util.Map;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skyrimgrade.domain.exception.NotFoundException;
 
 import jakarta.servlet.ServletException;
@@ -20,9 +21,11 @@ public class Router extends AbstractHandler implements RouterInterface {
     private final Map<String, RouteHandler> exactRoutes = new HashMap<>();
     private final List<RouteEntry> dynamicRoutes = new ArrayList<>();
     private final ErrorMapper errorMapper;
+    private final ObjectMapper objectMapper;
 
-    public Router(ErrorMapper errorMapper) {
+    public Router(ErrorMapper errorMapper, ObjectMapper objectMapper) {
         this.errorMapper = errorMapper;
+        this.objectMapper = objectMapper;
     }
 
     private static class RouteEntry {
@@ -126,11 +129,11 @@ public class Router extends AbstractHandler implements RouterInterface {
                 throw new NotFoundException("Route not found" + " " + request.getMethod() + " " + target);
             }
 
-            HttpContext ctx = new HttpContext(request, response);
+            HttpContext ctx = new HttpContext(request, response, objectMapper);
             handler.handle(ctx);
             baseRequest.setHandled(true);
         } catch (Exception e) {
-            HttpContext ctx = new HttpContext(request, response);
+            HttpContext ctx = new HttpContext(request, response, objectMapper);
             errorMapper.handle(e, ctx);
             baseRequest.setHandled(true);
         }

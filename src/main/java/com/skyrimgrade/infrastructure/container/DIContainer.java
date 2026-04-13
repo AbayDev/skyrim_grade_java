@@ -19,7 +19,7 @@ public class DIContainer implements DIContainerInterface {
 
     @Override
     public DIContainerInterface register(Class<?> iface, Class<?> impl) throws DIContainerException {
-        return register(iface, impl, Scope.SINGLETONE);
+        return register(iface, impl, Scope.SINGLETON);
     }
 
     @Override
@@ -29,7 +29,7 @@ public class DIContainer implements DIContainerInterface {
 
     @Override
     public DIContainerInterface register(Class<?> impl) throws DIContainerException {
-        return register(impl, impl, Scope.SINGLETONE);
+        return register(impl, impl, Scope.SINGLETON);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class DIContainer implements DIContainerInterface {
             throw new DIContainerException("Class " + iface.getName() + " is already registered");
         }
 
-        bindings.put(iface, new Binding(iface, Scope.SINGLETONE));
+        bindings.put(iface, new Binding(iface, Scope.SINGLETON));
         singletons.put(iface, instance);
 
         return this;
@@ -67,7 +67,7 @@ public class DIContainer implements DIContainerInterface {
             throw new DIContainerException("Type " + type.getName() + " not registered in DI container");
         }
 
-        if (binding.scope() == Scope.SINGLETONE) {
+        if (binding.scope() == Scope.SINGLETON) {
             Object singletone = singletons.get(type);
             if (singletone != null) {
                 return singletone;
@@ -84,7 +84,7 @@ public class DIContainer implements DIContainerInterface {
         try {
             Object instance = this.createInstance(binding.impl());
 
-            if (binding.scope() == Scope.SINGLETONE) {
+            if (binding.scope() == Scope.SINGLETON) {
                 singletons.put(type, instance);
             }
 

@@ -33,29 +33,39 @@ public class RouterScanner implements RouterScannerInterface {
         }
 
         for (Method method : controller.getClass().getDeclaredMethods()) {
+            boolean hasCtxParam = method.getParameterCount() == 1 && method.getParameterTypes()[0].equals(HttpContext.class);
+
+            RouteHandler handler = ctx -> {
+                if (hasCtxParam) {
+                    method.invoke(controller, ctx);
+                } else {
+                    method.invoke(controller);
+                }
+            };
+
             if (method.isAnnotationPresent(Get.class)) {
                 String path = method.getAnnotation(Get.class).value();
-                router.get(prefix + path, (ctx) -> method.invoke(controller, ctx));
+                router.get(prefix + path, handler);
             }
 
             if (method.isAnnotationPresent(Post.class)) {
                 String path = method.getAnnotation(Post.class).value();
-                router.post(prefix + path, (ctx) -> method.invoke(controller, ctx));
+                router.post(prefix + path, handler);
             }
 
             if (method.isAnnotationPresent(Put.class)) {
                 String path = method.getAnnotation(Put.class).value();
-                router.put(prefix + path, (ctx) -> method.invoke(controller, ctx));
+                router.put(prefix + path, handler);
             }
 
             if (method.isAnnotationPresent(Patch.class)) {
                 String path = method.getAnnotation(Patch.class).value();
-                router.patch(prefix + path, (ctx) -> method.invoke(controller, ctx));
+                router.patch(prefix + path, handler);
             }
 
             if (method.isAnnotationPresent(Delete.class)) {
                 String path = method.getAnnotation(Delete.class).value();
-                router.delete(prefix + path, (ctx) -> method.invoke(controller, ctx));
+                router.delete(prefix + path, handler);
             }
 
         }

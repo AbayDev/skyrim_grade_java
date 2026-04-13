@@ -6,7 +6,9 @@ import org.slf4j.LoggerFactory;
 import com.skyrimgrade.infrastructure.config.AppConfig;
 import com.skyrimgrade.infrastructure.config.ConfigLoader;
 import com.skyrimgrade.infrastructure.config.ControllerRegistrar;
+import com.skyrimgrade.infrastructure.config.JacksonConfig;
 import com.skyrimgrade.infrastructure.container.DIContainer;
+import com.skyrimgrade.infrastructure.container.Scope;
 import com.skyrimgrade.infrastructure.http.ErrorMapper;
 import com.skyrimgrade.infrastructure.http.HttpStatusResolver;
 import com.skyrimgrade.infrastructure.http.JettyServer;
@@ -38,10 +40,11 @@ public class Main {
             DIContainer container = new DIContainer();
 
             container
-                    .register(ConfigLoader.class)
-                    .register(AppConfig.class)
-                    .register(DatabaseConnectionManager.class)
-                    .register(FlywayMigrationRunner.class);
+                    .register(ConfigLoader.class, Scope.SINGLETON)
+                    .register(AppConfig.class, Scope.SINGLETON)
+                    .register(DatabaseConnectionManager.class, Scope.SINGLETON)
+                    .register(FlywayMigrationRunner.class, Scope.SINGLETON)
+                    .register(JacksonConfig.class, Scope.SINGLETON);
 
             // TODO: по мере роста проекта добавлять сюда:
             // .register(UserRepository.class, PostgresUserRepository.class)
@@ -69,19 +72,14 @@ public class Main {
             DatabaseConnectionManager.PoolStats stats = dbManager.getPoolStats();
             logger.info("Connection pool initialized: {}", stats);
 
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                logger.info("Shutting down application...");
-                dbManager.shutdown();
-                logger.info("Application shutdown complete");
-            }));
-
             FlywayMigrationRunner flywayMigrationRunner = container.get(FlywayMigrationRunner.class);
             flywayMigrationRunner.migrate();
 
             HttpStatusResolver httpStatusResolver = new HttpStatusResolver();
             ErrorMapper errorMapper = new ErrorMapper(httpStatusResolver);
 
-            Router router = new Router(errorMapper);
+            JacksonConfig jacksonConfig = container.get(JacksonConfig.class);
+            Router router = new Router(errorMapper, jacksonConfig.getObjectMapper());
             RouterScanner routerScanner = new RouterScanner(router);
             ControllerRegistrar contollerRegistrar = new ControllerRegistrar(container, routerScanner);
             contollerRegistrar.register(
@@ -98,6 +96,8 @@ public class Main {
                     server.stop();
                 } catch (Exception e) {
                     logger.error("Error stopping server", e);
+                } finally {
+                    dbManager.shutdown();
                 }
             }));
 

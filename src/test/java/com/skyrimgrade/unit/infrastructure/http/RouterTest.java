@@ -12,6 +12,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.skyrimgrade.infrastructure.config.JacksonConfig;
 import com.skyrimgrade.infrastructure.http.HttpContext;
 import com.skyrimgrade.infrastructure.http.HttpStatusResolver;
 import com.skyrimgrade.infrastructure.http.RouteHandler;
@@ -27,7 +29,8 @@ class RouterTest {
 
     @BeforeEach
     void setUp() {
-        router = new Router(new ErrorMapper(new HttpStatusResolver()));
+        ObjectMapper objectMapper = new JacksonConfig().getObjectMapper();
+        router = new Router(new ErrorMapper(new HttpStatusResolver()), objectMapper);
     }
 
     // ─── Exact routes ─────────────────────────────────────────────────────────

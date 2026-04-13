@@ -3,11 +3,13 @@ package com.skyrimgrade.infrastructure.http;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.skyrimgrade.domain.exception.AppException;
+import com.skyrimgrade.domain.exception.ValidationException;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -40,12 +42,18 @@ public class ErrorMapper {
 
         if (cause instanceof AppException ae) {
             logException(ae);
+
+            Map<String, Object> ext = null;
+            if (ae instanceof ValidationException ve) {
+                ext = Map.of("errors", ve.getErrors()); // явно решаем что показать
+            }
+
             ctx.json(
                     httpStatusResolver.resolve(ae),
                     new ErrorResponse(
                             ae.getErrorCode(),
                             ae.getMessage(),
-                            ae.getExtension(),
+                            ext,
                             ae.getTimestamp()
                     )
             );

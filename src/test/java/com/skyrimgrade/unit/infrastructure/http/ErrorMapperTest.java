@@ -2,18 +2,20 @@ package com.skyrimgrade.unit.infrastructure.http;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import static org.mockito.Mockito.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.skyrimgrade.domain.exception.AppException;
+import com.skyrimgrade.domain.exception.FieldError;
+import com.skyrimgrade.domain.exception.ValidationException;
 import com.skyrimgrade.infrastructure.http.ErrorMapper;
 import com.skyrimgrade.infrastructure.http.ErrorResponse;
 import com.skyrimgrade.infrastructure.http.HttpContext;
@@ -54,12 +56,9 @@ class ErrorMapperTest {
     }
 
     @Test
-    void handle_shouldIncludeExtension_whenAppExceptionHasExtension() throws IOException {
+    void handle_shouldIncludeErrors_whenValidationException() throws IOException {
         // given
-        Map<String, Object> ext = Map.of("field", "email");
-        AppException appEx = new AppException("Validation failed", ext) {
-            @Override public String getErrorCode() { return "VALIDATION_ERROR"; }
-        };
+        ValidationException appEx = new ValidationException("email", "must not be blank");
         when(httpStatusResolver.resolve(appEx)).thenReturn(422);
         ArgumentCaptor<ErrorResponse> bodyCaptor = ArgumentCaptor.forClass(ErrorResponse.class);
 
@@ -68,7 +67,10 @@ class ErrorMapperTest {
 
         // then
         verify(ctx).json(eq(422), bodyCaptor.capture());
-        assertThat(bodyCaptor.getValue().extension).containsEntry("field", "email");
+        List<?> errors = (List<?>) bodyCaptor.getValue().extension.get("errors");
+        assertThat(errors).hasSize(1);
+        assertThat(((FieldError) errors.get(0)).field()).isEqualTo("email");
+        assertThat(((FieldError) errors.get(0)).message()).isEqualTo("must not be blank");
     }
 
     // ─── InvocationTargetException ────────────────────────────────────────────

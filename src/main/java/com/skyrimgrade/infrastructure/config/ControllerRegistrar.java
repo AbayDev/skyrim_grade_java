@@ -17,7 +17,7 @@ public class ControllerRegistrar {
 
     public void register(Class<?>... controllers) throws DIContainerException {
         for (Class<?> controller : controllers) {
-            this.container.register(controller, Scope.SINGLETONE);
+            this.container.register(controller, Scope.SINGLETON);
         }
 
         Object[] instances = new Object[controllers.length];

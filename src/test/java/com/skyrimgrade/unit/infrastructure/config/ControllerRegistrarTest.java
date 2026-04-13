@@ -44,8 +44,8 @@ class ControllerRegistrarTest {
         FakeController fakeInstance = new FakeController();
         AnotherController anotherInstance = new AnotherController();
 
-        when(container.register(FakeController.class, Scope.SINGLETONE)).thenReturn(container);
-        when(container.register(AnotherController.class, Scope.SINGLETONE)).thenReturn(container);
+        when(container.register(FakeController.class, Scope.SINGLETON)).thenReturn(container);
+        when(container.register(AnotherController.class, Scope.SINGLETON)).thenReturn(container);
         when(container.get(FakeController.class)).thenReturn(fakeInstance);
         when(container.get(AnotherController.class)).thenReturn(anotherInstance);
 
@@ -53,8 +53,8 @@ class ControllerRegistrarTest {
         registrar.register(FakeController.class, AnotherController.class);
 
         // then
-        verify(container).register(FakeController.class, Scope.SINGLETONE);
-        verify(container).register(AnotherController.class, Scope.SINGLETONE);
+        verify(container).register(FakeController.class, Scope.SINGLETON);
+        verify(container).register(AnotherController.class, Scope.SINGLETON);
     }
 
     @Test
@@ -62,7 +62,7 @@ class ControllerRegistrarTest {
         // given
         FakeController fakeInstance = new FakeController();
 
-        when(container.register(FakeController.class, Scope.SINGLETONE)).thenReturn(container);
+        when(container.register(FakeController.class, Scope.SINGLETON)).thenReturn(container);
         when(container.get(FakeController.class)).thenReturn(fakeInstance);
 
         // when
@@ -87,7 +87,7 @@ class ControllerRegistrarTest {
     @Test
     void register_shouldThrow_whenContainerGetFails() throws DIContainerException {
         // given
-        when(container.register(FakeController.class, Scope.SINGLETONE)).thenReturn(container);
+        when(container.register(FakeController.class, Scope.SINGLETON)).thenReturn(container);
         doThrow(new DIContainerException("Bean not found"))
                 .when(container).get(FakeController.class);
 

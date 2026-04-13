@@ -6,6 +6,6 @@ package com.skyrimgrade.infrastructure.container;
  * PROTOTYPE - каждый вызов `container.get` новый инстанс класса 
  */
 public enum Scope {
-    SINGLETONE,
+    SINGLETON,
     PROTOTYPE
 }

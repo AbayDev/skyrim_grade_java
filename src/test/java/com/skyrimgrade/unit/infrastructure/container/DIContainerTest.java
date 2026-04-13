@@ -109,7 +109,7 @@ class DIContainerTest {
     @Test
     void shouldReturnSameInstanceForSingleton() throws DIContainerException {
         // given
-        container.register(Engine.class, Scope.SINGLETONE);
+        container.register(Engine.class, Scope.SINGLETON);
 
         // when
         Engine first = container.get(Engine.class);
@@ -188,7 +188,7 @@ class DIContainerTest {
     @Test
     void shouldShareSingletonAcrossMultipleDependents() throws DIContainerException {
         // given — Engine нужен и Car, и напрямую
-        container.register(Engine.class, Scope.SINGLETONE);
+        container.register(Engine.class, Scope.SINGLETON);
         container.register(Car.class);
 
         // when
