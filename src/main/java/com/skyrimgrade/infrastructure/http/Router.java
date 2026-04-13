@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class Router extends AbstractHandler implements RouterInterface {
 
     private final Map<String, RouteHandler> exactRoutes = new HashMap<>();
-    private final List<RouteEntry> dynamicRoutes = new ArrayList<>();
+    private final Map<String, List<RouteEntry>> dynamicRoutes = new HashMap<>();
     private final ErrorMapper errorMapper;
     private final ObjectMapper objectMapper;
 
@@ -41,9 +41,16 @@ public class Router extends AbstractHandler implements RouterInterface {
         }
     }
 
+    private String extractFirstSegment(String path) {
+        String[] parts = path.split("/");
+        return parts.length > 1 ? parts[1] : "";
+    }
+
     private void addRoute(String method, String path, RouteHandler handler) {
         if (path.contains("{")) {
-            dynamicRoutes.add(new RouteEntry(method, path, handler));
+            String segment = extractFirstSegment(path);
+            dynamicRoutes.computeIfAbsent(segment, k -> new ArrayList<>())
+                    .add(new RouteEntry(method, path, handler));
         } else {
             exactRoutes.put(method + ":" + path, handler);
         }
@@ -115,7 +122,10 @@ public class Router extends AbstractHandler implements RouterInterface {
         RouteHandler handler = exactRoutes.get(key);
 
         if (handler == null) {
-            for (RouteEntry entry : dynamicRoutes) {
+            String segment = extractFirstSegment(target);
+            List<RouteEntry> candidates = dynamicRoutes.getOrDefault(segment, List.of());
+
+            for (RouteEntry entry : candidates) {
                 if (entry.method.equals(request.getMethod()) && matches(entry.pattern, target)) {
                     extractParams(entry.pattern, target).forEach(request::setAttribute);
                     handler = entry.handler;
