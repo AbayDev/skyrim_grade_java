@@ -67,10 +67,11 @@ public class DIContainer implements DIContainerInterface {
             throw new DIContainerException("Type " + type.getName() + " not registered in DI container");
         }
 
+        // Быстрый путь — синглтон уже создан, возвращаем без блокировок
         if (binding.scope() == Scope.SINGLETON) {
-            Object singletone = singletons.get(type);
-            if (singletone != null) {
-                return singletone;
+            Object existing = singletons.get(type);
+            if (existing != null) {
+                return existing;
             }
         }
 
@@ -85,7 +86,10 @@ public class DIContainer implements DIContainerInterface {
             Object instance = this.createInstance(binding.impl());
 
             if (binding.scope() == Scope.SINGLETON) {
-                singletons.put(type, instance);
+                // putIfAbsent гарантирует: при гонке двух потоков выигрывает первый,
+                // singletons.get возвращает всегда один и тот же объект
+                singletons.putIfAbsent(type, instance);
+                return singletons.get(type);
             }
 
             return instance;
