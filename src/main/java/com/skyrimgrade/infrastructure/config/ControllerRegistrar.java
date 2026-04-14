@@ -3,7 +3,7 @@ package com.skyrimgrade.infrastructure.config;
 import com.skyrimgrade.infrastructure.container.DIContainerException;
 import com.skyrimgrade.infrastructure.container.DIContainerInterface;
 import com.skyrimgrade.infrastructure.container.Scope;
-import com.skyrimgrade.infrastructure.http.RouterScannerInterface;
+import com.skyrimgrade.infrastructure.http.router.RouterScannerInterface;
 
 public class ControllerRegistrar {
 

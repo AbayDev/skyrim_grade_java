@@ -1,7 +1,9 @@
-package com.skyrimgrade.infrastructure.http;
+package com.skyrimgrade.infrastructure.http.router;
 
 import java.lang.reflect.Method;
 
+import com.skyrimgrade.infrastructure.exception.RouterConfigurationException;
+import com.skyrimgrade.infrastructure.http.HttpContext;
 import com.skyrimgrade.infrastructure.http.annotations.Controller;
 import com.skyrimgrade.infrastructure.http.annotations.Delete;
 import com.skyrimgrade.infrastructure.http.annotations.Get;
@@ -24,6 +26,12 @@ public class RouterScanner implements RouterScannerInterface {
         }
     }
 
+    private void validateMethod(Method method) throws IllegalStateException {
+        if (method.getParameterCount() != 1 || !method.getParameterTypes()[0].equals(HttpContext.class)) {
+            throw new RouterConfigurationException("The method " + method.getName() + " must only accept an HttpContext argument");
+        }
+    }
+
     private void scanOne(Object controller) {
 
         String prefix = "";
@@ -33,15 +41,15 @@ public class RouterScanner implements RouterScannerInterface {
         }
 
         for (Method method : controller.getClass().getDeclaredMethods()) {
-            boolean hasCtxParam = method.getParameterCount() == 1 && method.getParameterTypes()[0].equals(HttpContext.class);
+            boolean isHandler = method.isAnnotationPresent(Get.class) || method.isAnnotationPresent(Post.class) || method.isAnnotationPresent(Put.class) || method.isAnnotationPresent(Delete.class) || method.isAnnotationPresent(Patch.class);
 
-            RouteHandler handler = ctx -> {
-                if (hasCtxParam) {
-                    method.invoke(controller, ctx);
-                } else {
-                    method.invoke(controller);
-                }
-            };
+            if (!isHandler) {
+                continue;
+            }
+
+            validateMethod(method);
+
+            RouteHandler handler = ctx -> method.invoke(controller, ctx);
 
             if (method.isAnnotationPresent(Get.class)) {
                 String path = method.getAnnotation(Get.class).value();

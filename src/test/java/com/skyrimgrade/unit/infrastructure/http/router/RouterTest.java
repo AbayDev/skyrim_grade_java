@@ -1,4 +1,4 @@
-package com.skyrimgrade.unit.infrastructure.http;
+package com.skyrimgrade.unit.infrastructure.http.router;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -7,18 +7,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.eclipse.jetty.server.Request;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skyrimgrade.infrastructure.config.JacksonConfig;
+import com.skyrimgrade.infrastructure.http.ErrorMapper;
 import com.skyrimgrade.infrastructure.http.HttpContext;
 import com.skyrimgrade.infrastructure.http.HttpStatusResolver;
-import com.skyrimgrade.infrastructure.http.RouteHandler;
-import com.skyrimgrade.infrastructure.http.Router;
-import com.skyrimgrade.infrastructure.http.ErrorMapper;
+import com.skyrimgrade.infrastructure.http.router.RouteHandler;
+import com.skyrimgrade.infrastructure.http.router.Router;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

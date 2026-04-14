@@ -1,4 +1,4 @@
-package com.skyrimgrade.infrastructure.http;
+package com.skyrimgrade.infrastructure.http.router;
 
 public interface RouterInterface {
     void get(String path, RouteHandler handler);

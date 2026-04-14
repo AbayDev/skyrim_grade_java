@@ -1,4 +1,4 @@
-package com.skyrimgrade.infrastructure.http;
+package com.skyrimgrade.infrastructure.http.router;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +11,8 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skyrimgrade.domain.exception.NotFoundException;
+import com.skyrimgrade.infrastructure.http.ErrorMapper;
+import com.skyrimgrade.infrastructure.http.HttpContext;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
