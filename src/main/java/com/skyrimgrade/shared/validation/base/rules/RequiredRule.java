@@ -12,7 +12,7 @@ public class RequiredRule {
             return !s.isBlank();
         }
         if (value instanceof Collection<?> c) {
-            return c.isEmpty();
+            return !c.isEmpty();
         }
         return true;
     }

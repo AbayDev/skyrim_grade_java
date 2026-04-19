@@ -8,11 +8,11 @@ public interface BaseValidatorInterface {
 
     boolean minLength(String value, Integer length);
 
-    boolean max(Integer value, Integer num);
+    boolean max(Number value, Number num);
 
-    boolean min(Integer value, Integer num);
+    boolean min(Number value, Number num);
 
-    boolean enums(Object value, Class<? extends Enum<?>> enumClass);
+    boolean enumValue(Object value, Class<? extends Enum<?>> enumClass);
 
     boolean email(String value);
 

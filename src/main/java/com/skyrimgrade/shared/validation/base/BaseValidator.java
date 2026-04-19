@@ -31,7 +31,7 @@ public class BaseValidator implements BaseValidatorInterface {
     }
 
     @Override
-    public boolean enums(Object value, Class<? extends Enum<?>> enumClass) {
+    public boolean enumValue(Object value, Class<? extends Enum<?>> enumClass) {
       return enumRule.validate(value, enumClass);
     } 
 
@@ -46,12 +46,12 @@ public class BaseValidator implements BaseValidatorInterface {
     }
 
     @Override
-    public boolean max(Integer value, Integer num) {
+    public boolean max(Number value, Number num) {
       return maxRule.validate(value, num);
     }
 
     @Override
-    public boolean min(Integer value, Integer num) {
+    public boolean min(Number value, Number num) {
       return minRule.validate(value, num);
     }
 

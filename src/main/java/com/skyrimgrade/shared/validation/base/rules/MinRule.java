@@ -2,7 +2,10 @@ package com.skyrimgrade.shared.validation.base.rules;
 
 public class MinRule {
 
-    public boolean validate(Integer value, Integer num) {
-        return value >= num;
+    public boolean validate(Number value, Number num) {
+        if (value == null || num == null) {
+            return false;
+        }
+        return value.doubleValue() >= num.doubleValue();
     }
 }
