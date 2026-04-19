@@ -127,8 +127,8 @@ class TaskController {
         - Min
         - Enum
         - Pattern
-      - Validator
-      - ValidatorInterface
+      - BaseValidator
+      - BaseValidatorInterface
     - annotaion
       - annotaions
         - Required
@@ -233,12 +233,12 @@ AnnotationValidator должен использоваться внутри HttpC
   }
 ```
 
-# Пример Validator
+# Пример BaseValidator
 Этот класс библеотека. будет использоваться в ComplexValidator/rules и AnnotationValidator
 
 ```java
 
-interface ValidatorInterface {
+interface BaseValidatorInterface {
   boolean required(Object value);
   boolean maxLength(String value, int length);
   boolean minLength(String value, int length);
@@ -255,7 +255,7 @@ class RequiredRule {
   }
 }
 
-public class Validator implements ValidatorInterface {
+public class BaseValidator implements BaseValidatorInterface {
   
   private final RequiredRule requiredRule = new RequiredRule(); 
 
