@@ -86,24 +86,24 @@ class TaskController {
 
     // пример простой валидации
     // то есть можно валидировать без аннотации
-    objectValidator.required(TaskCreateDto::getName)
-    objectValidator.maxLength(TaskCreateDto::getName, 50)
-    objectValidator.minLength(TaskCreateDto::getName, 3)
-    objectValidator.enumValue(TaskCreateDto::getLevel, DifficultLevel.class)
+    objectValidator.required(TaskCreateDto::getName, "name")
+    objectValidator.maxLength(TaskCreateDto::getName, "name", 50)
+    objectValidator.minLength(TaskCreateDto::getName, "name" 3)
+    objectValidator.enumValue(TaskCreateDto::getLevel, "level" DifficultLevel.class)
 
-    objectValidator.required(TaskCreateDto::getDescription, "Описание обязательное поле")
-    objectValidator.maxLength(TaskCreateDto::getDescription, 50, "Максимальная длина описания должно быть не более 50 символов")
-    objectValidator.minLength(TaskCreateDto::getDescription, 3, "Минимальная длина описания должна быть не менее 3 символов")
+    objectValidator.required(TaskCreateDto::getDescription, "description", "Описание обязательное поле")
+    objectValidator.maxLength(TaskCreateDto::getDescription, "description", 50, "Максимальная длина описания должно быть не более 50 символов")
+    objectValidator.minLength(TaskCreateDto::getDescription, "description", 3, "Минимальная длина описания должна быть не менее 3 символов")
 
-    objectValidator.max(TaskCreateDto::getCount, 10, "Количество не должно быть больше 50")
-    objectValidator.min(TaskCreateDto::getCount, 3, "Количество не должно быть меньше 3")
+    objectValidator.max(TaskCreateDto::getCount, "count", 10, "Количество не должно быть больше 50")
+    objectValidator.min(TaskCreateDto::getCount, "count", 3, "Количество не должно быть меньше 3")
 
-    objectValidator.email(TaskCreateDto::getEmail)
-    objectValidator.pattern(TaskCreateDto::getSlug, "^[a-z0-9-]+$")
+    objectValidator.email(TaskCreateDto::getEmail, "email")
+    objectValidator.pattern(TaskCreateDto::getSlug, "slug", "^[a-z0-9-]+$")
 
     // пример динамической валидации
     if (taskCreateDto.getLevel() == DifficultLevel.LEGENDARY) {
-      objectValidator.max(TaskCreateDto::getCount, 20)
+      objectValidator.max(TaskCreateDto::getCount, "count", 20)
     }
 
     // можно собрать в кучу ошибки и только тогда вызваю exception
