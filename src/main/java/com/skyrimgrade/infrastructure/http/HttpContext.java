@@ -14,15 +14,18 @@ public class HttpContext {
 
     private final HttpServletRequest request;
     private final HttpServletResponse response;
+    private final HttpContextValidatorInterface httpContextValidator;
 
     public HttpContext(
             HttpServletRequest request,
             HttpServletResponse response,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            HttpContextValidatorInterface httpContextValidator
     ) {
         this.request = request;
         this.response = response;
         this.objectMapper = objectMapper;
+        this.httpContextValidator = httpContextValidator;
     }
 
     public void json(int status, Object body) throws IOException {
@@ -33,7 +36,10 @@ public class HttpContext {
 
     public <T> T body(Class<T> type) throws IOException {
         String json = request.getReader().lines().collect(Collectors.joining());
-        return objectMapper.readValue(json, type);
+        T obj = objectMapper.readValue(json, type);
+        this.httpContextValidator.validate(obj);
+
+        return obj;
     }
 
     public String pathParam(String name) {

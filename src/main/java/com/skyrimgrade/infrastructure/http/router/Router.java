@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skyrimgrade.domain.exception.NotFoundException;
 import com.skyrimgrade.infrastructure.http.ErrorMapper;
 import com.skyrimgrade.infrastructure.http.HttpContext;
+import com.skyrimgrade.infrastructure.http.HttpContextValidatorInterface;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,10 +25,12 @@ public class Router extends AbstractHandler implements RouterInterface {
     private final Map<String, List<RouteEntry>> dynamicRoutes = new HashMap<>();
     private final ErrorMapper errorMapper;
     private final ObjectMapper objectMapper;
+    private final HttpContextValidatorInterface httpContextValidator;
 
-    public Router(ErrorMapper errorMapper, ObjectMapper objectMapper) {
+    public Router(ErrorMapper errorMapper, ObjectMapper objectMapper, HttpContextValidatorInterface httpContextValidator) {
         this.errorMapper = errorMapper;
         this.objectMapper = objectMapper;
+        this.httpContextValidator = httpContextValidator;
     }
 
     private static class RouteEntry {
@@ -141,11 +144,11 @@ public class Router extends AbstractHandler implements RouterInterface {
                 throw new NotFoundException("Route not found" + " " + request.getMethod() + " " + target);
             }
 
-            HttpContext ctx = new HttpContext(request, response, objectMapper);
+            HttpContext ctx = new HttpContext(request, response, objectMapper, httpContextValidator);
             handler.handle(ctx);
             baseRequest.setHandled(true);
         } catch (Exception e) {
-            HttpContext ctx = new HttpContext(request, response, objectMapper);
+            HttpContext ctx = new HttpContext(request, response, objectMapper, httpContextValidator);
             errorMapper.handle(e, ctx);
             baseRequest.setHandled(true);
         }

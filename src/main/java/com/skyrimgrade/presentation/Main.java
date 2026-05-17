@@ -10,6 +10,7 @@ import com.skyrimgrade.infrastructure.config.JacksonConfig;
 import com.skyrimgrade.infrastructure.container.DIContainer;
 import com.skyrimgrade.infrastructure.container.Scope;
 import com.skyrimgrade.infrastructure.http.ErrorMapper;
+import com.skyrimgrade.infrastructure.http.HttpContextAnnotationValidator;
 import com.skyrimgrade.infrastructure.http.HttpStatusResolver;
 import com.skyrimgrade.infrastructure.http.JettyServer;
 import com.skyrimgrade.infrastructure.http.router.Router;
@@ -19,6 +20,7 @@ import com.skyrimgrade.infrastructure.persistence.DatabaseConnectionManager;
 import com.skyrimgrade.presentation.rest.controllers.AuthController;
 import com.skyrimgrade.presentation.rest.controllers.HealthController;
 import com.skyrimgrade.presentation.rest.controllers.UserContextController;
+import com.skyrimgrade.shared.validation.annotation.AnnotationValidator;
 
 /**
  * Main entry point for SkyrimGrade application.
@@ -79,7 +81,11 @@ public class Main {
             ErrorMapper errorMapper = new ErrorMapper(httpStatusResolver);
 
             JacksonConfig jacksonConfig = container.get(JacksonConfig.class);
-            Router router = new Router(errorMapper, jacksonConfig.getObjectMapper());
+            Router router = new Router(
+                errorMapper, 
+                jacksonConfig.getObjectMapper(), 
+                new HttpContextAnnotationValidator(new AnnotationValidator())
+            );
             RouterScanner routerScanner = new RouterScanner(router);
             ControllerRegistrar contollerRegistrar = new ControllerRegistrar(container, routerScanner);
             contollerRegistrar.register(

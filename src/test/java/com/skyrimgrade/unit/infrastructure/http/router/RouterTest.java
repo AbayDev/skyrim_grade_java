@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skyrimgrade.infrastructure.config.JacksonConfig;
 import com.skyrimgrade.infrastructure.http.ErrorMapper;
 import com.skyrimgrade.infrastructure.http.HttpContext;
+import com.skyrimgrade.infrastructure.http.HttpContextValidatorInterface;
 import com.skyrimgrade.infrastructure.http.HttpStatusResolver;
 import com.skyrimgrade.infrastructure.http.router.RouteHandler;
 import com.skyrimgrade.infrastructure.http.router.Router;
@@ -30,7 +31,7 @@ class RouterTest {
     @BeforeEach
     void setUp() {
         ObjectMapper objectMapper = new JacksonConfig().getObjectMapper();
-        router = new Router(new ErrorMapper(new HttpStatusResolver()), objectMapper);
+        router = new Router(new ErrorMapper(new HttpStatusResolver()), objectMapper, mock(HttpContextValidatorInterface.class));
     }
 
     // ─── Exact routes ─────────────────────────────────────────────────────────
